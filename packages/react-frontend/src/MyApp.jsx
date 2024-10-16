@@ -6,15 +6,32 @@ function MyApp() {
     const [characters, setCharacters] = useState([]);
 
     function removeOneCharacter(index) {
-        const updated = characters.filter((character, i) => {
-            return i !== index;
+        deleteUser(index)
+        .then((response) => {
+            if(response.status === 204) {
+                const updated = characters.filter((character, i) => {
+                    return i !== index;
+                });
+                setCharacters(updated);
+            }
+        })
+        .catch((error) => {
+            console.log(error);
         });
-        setCharacters(updated);
     }
 
     function updateList(person) {
         postUser(person)
-          .then(() => setCharacters([...characters, person]))
+          .then((response) => {
+            if(response.status === 201) {
+                return response.json();
+            }
+          })
+          .then((personWithID) => {
+            if (personWithID) {
+                setCharacters([...characters, personWithID]);
+            }
+          })
           .catch((error) => {
             console.log(error);
           });
@@ -26,12 +43,21 @@ function MyApp() {
     }
 
     function postUser(person) {
-        const promise = fetch("Http://localhost:8000/users", {
+        const promise = fetch("http://localhost:8000/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(person)
+        });
+      
+        return promise;
+    }
+
+    function deleteUser(index) {
+        const id = characters[index].id;
+        const promise = fetch(`http://localhost:8000/users/${id}`, {
+          method: "DELETE"
         });
       
         return promise;
